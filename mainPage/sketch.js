@@ -4,6 +4,7 @@ let finalLocationLabel;
 let mapImg;
 let menuButton;
 let menuBar;
+let msg;
 
 let revealImages = [];
 let labelImages = [];
@@ -20,10 +21,20 @@ let LungSelected = 2; //English Selected
 let Subtitles_OnOf = true;
 let LungMenuActive = false;
 
+let rotateWarningImg;
+let labelsRevealed = false;
+
+let refreshSystem = false;
+
+let selectedLanguage = localStorage.getItem('selectedLanguage') || 'en'; // Default to English
+let selectedLanguageOnOf = localStorage.getItem('selectedLanguageOnOf') || 'on'; //Default to ON
+
+
 function preload() {
   bgImage = loadImage('../assets/mainPage/MainPage_BG.jpg');
   finalLocationLabel = loadImage('../assets/mainPage/Lower_Sighn.png');
   mapImg = loadImage('../assets/mainPage/Map.png');
+  rotateWarningImg = loadImage('../assets/RotateIMG.png');
   
   for (let i = 1; i <= maxReveals; i++) {
 	revealImages.push(loadImage(`../assets/mainPage/locatioTrigger/T${i}.png`));
@@ -55,6 +66,8 @@ function setup() {
   menuButton.size(menuW, menuH);
   menuButton.position(width / 2 - menuW / 2, height * 0.005);
   menuButton.mousePressed(menuButtonPressed);
+  menuButton.style('position', 'absolute');
+  menuButton.style('z-index', '10');
   
   // === Menu Bar (top center) ===
   menuBarH = width * 0.21;
@@ -103,29 +116,49 @@ function setup() {
   // === Lunguage Menu (top center) ===
   LungMenu_Body = createImg('../assets/mainPage/PopUpMenu.png', 'Lunguage Menu Body');
   LungMenu_Body.size(LungBody_W, LungBody_H);
-  LungMenu_Body.position(width / 2 - LungBody_W / 2, height * 0.1);
+  LungMenu_Body.position(width / 2 - LungBody_W / 2, height * 0.12);
   LungMenu_Body.hide();
+  LungMenu_Body.style('z-index', '7');
   
   // === Lunguage Menu BT1 (top center) ===
-  LungMenu_BT1 = createImg('../assets/mainPage/buttons/GR_D.png', 'Greek Button');
+  if (selectedLanguage === 'gr') {
+	LungSelected = 1;
+	LungMenu_BT1 = createImg('../assets/mainPage/buttons/GR_A.png', 'Greek Button');
+  } else {
+	LungMenu_BT1 = createImg('../assets/mainPage/buttons/GR_D.png', 'Greek Button');
+  }
   LungMenu_BT1.size(LungBT_W, LungBT_H);
-  LungMenu_BT1.position(width / 2 - LungBT_W / 2, height * 0.19);
+  LungMenu_BT1.position(width / 2 - LungBT_W / 2, height * 0.22);
   LungMenu_BT1.mousePressed(GreekSelected);
   LungMenu_BT1.hide();
+  LungMenu_BT1.style('z-index', '8');
   
   // === Lunguage Menu BT2 (top center) ===
-  LungMenu_BT2 = createImg('../assets/mainPage/buttons/EN_A.png', 'English Button');
+  if (selectedLanguage === 'en') {
+	LungSelected = 2;
+	LungMenu_BT2 = createImg('../assets/mainPage/buttons/EN_A.png', 'English Button');
+  } else {
+	LungMenu_BT2 = createImg('../assets/mainPage/buttons/EN_D.png', 'English Button');  
+  }
   LungMenu_BT2.size(LungBT_W, LungBT_H);
-  LungMenu_BT2.position(width / 2 - LungBT_W / 2, height * 0.27);
+  LungMenu_BT2.position(width / 2 - LungBT_W / 2, height * 0.30);
   LungMenu_BT2.mousePressed(EnglishSelected);
   LungMenu_BT2.hide();
+  LungMenu_BT2.style('z-index', '8');
   
   // === Lunguage Menu BT3 (top center) ===
-  LungMenu_BT3 = createImg('../assets/mainPage/buttons/OnBT.png', 'ON/OFF Button');
+  if (selectedLanguageOnOf === 'on') {
+	Subtitles_OnOf = true;
+	LungMenu_BT3 = createImg('../assets/mainPage/buttons/OnBT.png', 'ON Button');
+  } else {
+	Subtitles_OnOf = false;
+	LungMenu_BT3 = createImg('../assets/mainPage/buttons/OffBT.png', 'OFF Button');
+  }
   LungMenu_BT3.size(LungBT_W, LungBT_H);
-  LungMenu_BT3.position(width / 2 - LungBT_W / 2, height * 0.415);
+  LungMenu_BT3.position(width / 2 - LungBT_W / 2, height * 0.465);
   LungMenu_BT3.mousePressed(LunguageOnOf);
   LungMenu_BT3.hide();
+  LungMenu_BT3.style('z-index', '8');
 
   
   let mapW = width;
@@ -156,7 +189,7 @@ function setup() {
     labelImages[i] = lImg;
   }
   
-  // === Auto-reveal from localStorage (READ ONLY) ===
+  // === Auto-reveal from localStorage
   autoRevealCount = parseInt(localStorage.getItem("LocationsComplete")) || 0;
 
   for (let i = 0; i < autoRevealCount && i < maxReveals; i++) {
@@ -169,6 +202,70 @@ function setup() {
 }
 
 function draw() {
+  // === Enforce portrait orientation ===
+  if (windowWidth > windowHeight) {
+	  labelsRevealed = false; // Reset when user switches to landscape
+	  refreshSystem = true;
+
+	  background(0);
+	  imageMode(CENTER);
+	  let warningSize = min(width, height) * 0.4;
+	  image(rotateWarningImg, width / 2, height / 2.5, warningSize, warningSize);
+
+	  fill(255);
+	  textAlign(CENTER, TOP);
+	  textSize(width * 0.04);
+	  if (selectedLanguage === 'gr') {
+		// Show Greek text
+		msg = "Παρακαλώ κρατήστε τη συσκευή κάθετα";
+	  } else {
+		// Show English text
+		msg = "Please hold your device vertically";
+      }
+	  let textBoxWidth = width * 0.8;
+	  text(msg, width / 2 - textBoxWidth / 2, height / 2 + warningSize / 2, textBoxWidth);
+
+	  // Hide all interactive elements
+	  hideMenuBar();      // Hides menuBar and menuButton
+	  hideLungMenu();     // Hides language menu
+	  menuButton.hide();  // Redundant if hideMenuBar does this, but safe
+	  scanButton.hide();
+	  languageButton.hide();
+	  exitButton.hide();
+
+	  for (let i = 0; i < revealImages.length; i++) {
+		revealImages[i].hide();
+		labelImages[i].hide();
+	  }
+
+	  return;
+  }
+  
+  // Re-show revealed images when back in portrait
+  if (windowWidth < windowHeight) {
+	  
+	  //Fix for MenuButton Problem -[]-
+	  if (refreshSystem == true) {
+		  location.reload();
+		  refreshSystem = false;
+	  }
+	  
+	  // We're now in portrait mode, after being warned
+	  if (!labelsRevealed) {
+		autoRevealCount = parseInt(localStorage.getItem("LocationsComplete")) || 0;
+
+		for (let i = 0; i < autoRevealCount && i < maxReveals; i++) {
+		  revealImages[i].show();
+		  labelImages[i].show();
+		  console.log(`Auto-Revealed from saved progress: T${i + 1} and L${i + 1}`);
+		}
+
+		labelsRevealed = true;
+		menuButton.show();
+	  }
+  }
+
+  imageMode(CORNER); //Important reset
   image(bgImage, 0, 0, width, height);
 
   // === Centered MAP ===
@@ -187,30 +284,31 @@ function draw() {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 
-  // Reposition menu button
-  menuW = width * 0.25;
-  menuH = width * 0.15;
-  menuButton.size(menuW, menuH);
-  menuButton.position(width / 2 - menuW / 2, height * 0.005);
-  
-  mapW = width;
-  mapH = (mapImg.height / mapImg.width) * mapW;
-  mapY = height / 2 - mapH / 2;
-
-  labelW = width;
-  labelH = (finalLocationLabel.height / finalLocationLabel.width) * labelW;
-  labelY = height * 0.95 - labelH / 2;
-
-  for (let i = 0; i < revealImages.length; i++) {
-    revealImages[i].size(mapW, mapH);
-    revealImages[i].position(0, mapY);
-
-    labelImages[i].size(labelW, labelH);
-    labelImages[i].position(0, labelY);
-  }
-  
+  // === Recalculate shared dimensions ===
   let btnW = width * 0.23;
   let btnH = (128 / 225) * btnW;
+
+  let menuW = width * 0.25;
+  let menuH = width * 0.15;
+  let menuBarH = width * 0.21;
+
+  let mapW = width;
+  let mapH = (mapImg.height / mapImg.width) * mapW;
+  let mapY = height / 2 - mapH / 2;
+
+  let labelW = width;
+  let labelH = (finalLocationLabel.height / finalLocationLabel.width) * labelW;
+  let labelY = height * 0.95 - labelH / 2;
+
+  // === Resize & reposition buttons ===
+  menuButton.size(menuW, menuH);
+  menuButton.position(width / 2 - menuW / 2, height * 0.005);
+
+  menuBar.size(width, menuBarH);
+  menuBar.position(0, height * 0.005);
+
+  menuPop.size(width, menuBarH);
+  menuPop.position(0, height * 0.005);
 
   languageButton.size(btnW, btnH);
   languageButton.position(width / 2 - btnW / 2, height * 0.015);
@@ -221,7 +319,33 @@ function windowResized() {
   exitButton.size(btnW, btnH);
   exitButton.position(width / 2 + btnW * 0.5 + 10, height * 0.015);
 
+  // === Language Menu Sizing ===
+  let LungBody_W = width * 0.7;
+  let LungBody_H = width * 0.9;
 
+  let LungBT_W = width * 0.6;
+  let LungBT_H = width * 0.15;
+
+  LungMenu_Body.size(LungBody_W, LungBody_H);
+  LungMenu_Body.position(width / 2 - LungBody_W / 2, height * 0.12);
+
+  LungMenu_BT1.size(LungBT_W, LungBT_H);
+  LungMenu_BT1.position(width / 2 - LungBT_W / 2, height * 0.22);
+
+  LungMenu_BT2.size(LungBT_W, LungBT_H);
+  LungMenu_BT2.position(width / 2 - LungBT_W / 2, height * 0.30);
+
+  LungMenu_BT3.size(LungBT_W, LungBT_H);
+  LungMenu_BT3.position(width / 2 - LungBT_W / 2, height * 0.465);
+
+  // === Reposition all revealed images ===
+  for (let i = 0; i < revealImages.length; i++) {
+    revealImages[i].size(mapW, mapH);
+    revealImages[i].position(0, mapY);
+
+    labelImages[i].size(labelW, labelH);
+    labelImages[i].position(0, labelY);
+  }
 }
 
 function mousePressed() {
@@ -242,8 +366,9 @@ function mousePressed() {
     let isOverGreek = isMouseOver(LungMenu_BT1);
     let isOverEnglish = isMouseOver(LungMenu_BT2);
     let isOverOnOff = isMouseOver(LungMenu_BT3);
+	let isOverLang = isMouseOver(languageButton);
 
-    if (!isOverGreek && !isOverEnglish && !isOverOnOff && LungMenuActive == true) {
+    if (!isOverGreek && !isOverEnglish && !isOverOnOff && !isOverLang && LungMenuActive == true) {
       hideLungMenu();
 	  LungMenuActive = false;
       return;
@@ -325,14 +450,20 @@ function LunguageBT_Pressed() {
 		languageButton.attribute('src', '../assets/mainPage/buttons/Language_BT.png');
 	}, 400);
 	
-	LungMenu_Body.show();
-	LungMenu_BT1.show();
-	LungMenu_BT2.show();
-	LungMenu_BT3.show();
-	
-	setTimeout(() => {
-		LungMenuActive = true;
-	}, 400);
+	if (LungMenuActive == false) {
+		LungMenu_Body.show();
+		LungMenu_BT1.show();
+		LungMenu_BT2.show();
+		LungMenu_BT3.show();
+		setTimeout(() => {
+			LungMenuActive = true;
+		}, 400);
+	} else {
+		hideLungMenu();
+		setTimeout(() => {
+			LungMenuActive = false;
+		}, 400);
+	}
 }
 
 function GreekSelected() {
@@ -343,6 +474,10 @@ function GreekSelected() {
 		LungMenu_BT2.attribute('src', '../assets/mainPage/buttons/EN_D.png');
 		LungSelected = 1;
 	} 
+	
+	// Store the selected language
+	localStorage.setItem('selectedLanguage', 'gr');
+	selectedLanguage = 'gr';
 }
 
 function EnglishSelected() {
@@ -353,6 +488,10 @@ function EnglishSelected() {
 		LungMenu_BT2.attribute('src', '../assets/mainPage/buttons/EN_A.png');
 		LungSelected = 2;
 	}
+	
+	// Store the selected language
+	localStorage.setItem('selectedLanguage', 'en');
+	selectedLanguage = 'en';
 }
 
 function LunguageOnOf() {
@@ -362,10 +501,16 @@ function LunguageOnOf() {
 		console.log('Off');
 		LungMenu_BT3.attribute('src', '../assets/mainPage/buttons/OffBT.png');
 		Subtitles_OnOf = false;
+		
+		localStorage.setItem('selectedLanguageOnOf', 'off');
+		selectedLanguageOnOf = 'off';
 	} else {
 		console.log('On');
 		LungMenu_BT3.attribute('src', '../assets/mainPage/buttons/OnBT.png');
 		Subtitles_OnOf = true;
+		
+		localStorage.setItem('selectedLanguageOnOf', 'on');
+		selectedLanguageOnOf = 'on';
 	}
 }
 

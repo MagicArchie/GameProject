@@ -14,6 +14,9 @@ let ReturnBT;
 let clickedIndex = -1;
 let highlightTimer = 0;
 
+let selectedLanguage = localStorage.getItem('selectedLanguage') || 'en'; // Default to English
+let selectedLanguageOnOf = localStorage.getItem('selectedLanguageOnOf') || 'on'; //Default to ON
+
 function preload() {
   bgImage = loadImage('../../../assets/mainPage/MainPage_BG.jpg');
 

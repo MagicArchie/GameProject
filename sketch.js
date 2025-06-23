@@ -4,6 +4,9 @@ let selectedDifficulty = null;
 let pirateFont;
 let startEnabled = false; // prevent clicking Start until ready
 
+let selectedLanguage = localStorage.getItem('selectedLanguage') || 'en'; // Default to English
+let selectedLanguageOnOf = localStorage.getItem('selectedLanguageOnOf') || 'on'; //Default to ON
+
 function preload() {
   bgImage = loadImage('assets/Background_IMG.jpg');
   
