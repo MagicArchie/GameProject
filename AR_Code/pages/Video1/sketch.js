@@ -54,7 +54,7 @@ function windowResized() {
 
 function setupUI() {
   // === Video Setup ===
-  video = createVideo(['../../../assets/videos/video1.mp4']);
+  video = createVideo(['../../../assets/videos/Video1.mp4']);
   video.attribute('controls', true);
   video.show();
 
