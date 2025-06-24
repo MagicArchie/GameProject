@@ -90,3 +90,4 @@ function RetuenPressed() {
 		window.location.href = "../../../mainPage/game.html";
 	}, 600);
 }
+
