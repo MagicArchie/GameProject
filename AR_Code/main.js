@@ -1,81 +1,156 @@
-const THREE = window.MINDAR.IMAGE.THREE; // Use THREE.js from the MindAR library
+const THREE = window.MINDAR.IMAGE.THREE;
 
-// Wait for the DOM content to fully load before running the script
 document.addEventListener('DOMContentLoaded', () => {
-  let mindarThree = null; // Variable to hold the AR session instance
-  let isStarted = false;  // Flag to track if the AR session is running
+  //Get the user's selected language from localStorage
+  const lang = localStorage.getItem('selectedLanguage') || 'en'; // default to English
+  
+  if (lang === 'gr') {
+	document.body.classList.add('gr');
+  } else {
+	document.body.classList.remove('gr');
+  }
+  
+  const BTSound = new Audio('../../../assets/sounds/BT_SFX3.mp3');
+  BTSound.volume = 0.8;
+  
+  const stopSound = new Audio('../../../assets/sounds/BT_SFX3.mp3'); // same file, different object
+  stopSound.volume = 0.8;
 
-  // Function to start the AR experience
+  //Update the heading and button labels based on the selected language
+  const heading = document.querySelector('h1');
+  const startButton = document.getElementById('startButton');
+  const stopButton = document.getElementById('stopButton');
+  const backButton = document.getElementById('backButton');
+
+  if (lang === 'gr') {
+    heading.textContent = 'Εξερεύνησε την πόλη, ένα στοιχείο τη φοράά';
+    startButton.textContent = 'Έναρξη';
+    stopButton.textContent = 'Τέλος';
+    backButton.textContent = '⬅ Επιστροφή';
+  } else {
+    heading.textContent = 'Explore the City, One Marker at a Time';
+    startButton.textContent = 'Start';
+    stopButton.textContent = 'Stop';
+    backButton.textContent = '⬅ Go Back';
+  }
+
+  let mindarThree = null;
+  let isStarted = false;
+
   const start = async () => {
-    if (isStarted) return; // If already started, do nothing
-    isStarted = true;      // Mark the session as started
+	  
+	BTSound.play();  
+	  
+    if (isStarted) return;
+    isStarted = true;
 
-    // Initialize MindAR with the container and image target configuration
     mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,                // Use the whole page as the AR view
-      imageTargetSrc: './assets/targets/targets.mind' // Define the image target file
+      container: document.body,
+      imageTargetSrc: './assets/targets/targets.mind'
     });
+
     const {renderer, scene, camera} = mindarThree;
 
-    const Anchor0 = mindarThree.addAnchor(0);
-        Anchor0.onTargetFound = () => {
-     
-		console.log("Target 0 Found!");
-		window.location.href = "./pages/Video1/index.html"; // Redirect to page 1
-		//window.open('https://www.mindar.org/', '_self'); 
-	};
-   
-    const Anchor1 = mindarThree.addAnchor(1);
-		Anchor1.onTargetFound = () => {
-     
-		console.log("Target 1 Found!");
-		window.location.href = "./pages/Video2/index.html"; // Redirect to page 2
-        //window.open('https://www.mindar.org/', '_self'); 
-	};
-		
-	const Anchor2 = mindarThree.addAnchor(2);
-		Anchor2.onTargetFound = () => {
-     
-		console.log('Target 2 Found!');
-		window.location.href = './pages/Video3/index.html'; // Redirect to page 3
-        //window.open('https://www.mindar.org/', '_self'); 
+    mindarThree.addAnchor(0).onTargetFound = () => {
+      console.log("Target 1 Found!");
+      window.location.href = "./pages/Video1/index.html";
+    };
+
+    mindarThree.addAnchor(1).onTargetFound = () => {
+      console.log("Target 2 Found!");
+      window.location.href = "./pages/Video2/index.html";
+    };
+
+    mindarThree.addAnchor(2).onTargetFound = () => {
+      console.log("Target 3 Found!");
+      window.location.href = './pages/Video3/index.html';
+    };
+
+    mindarThree.addAnchor(3).onTargetFound = () => {
+      console.log("Target 4 Found!");
+      window.location.href = './pages/Video4/index.html';
     };
 	
-	const Anchor3 = mindarThree.addAnchor(3);
-		Anchor3.onTargetFound = () => {
-     
-		console.log('Target 3 Found!');
-		window.location.href = './pages/Video4/index.html'; // Redirect to page 4
-        //window.open('https://www.mindar.org/', '_self'); 
+	mindarThree.addAnchor(4).onTargetFound = () => {
+      console.log("Target 5 Found!");
+      window.location.href = './pages/Video5/index.html';
     };
-   
-    // Start the AR experience and continuously render the scene
+	
+	mindarThree.addAnchor(5).onTargetFound = () => {
+      console.log("Target 6 Found!");
+      window.location.href = './pages/Video6/index.html';
+    };
+	
+	mindarThree.addAnchor(6).onTargetFound = () => {
+      console.log("Target 7 Found!");
+      window.location.href = './pages/Video7/index.html';
+    };
+	
+	mindarThree.addAnchor(7).onTargetFound = () => {
+      console.log("Target 8 Found!");
+      window.location.href = './pages/Video8/index.html';
+    };
+	
+	mindarThree.addAnchor(8).onTargetFound = () => {
+      console.log("Target 9 Found!");
+      window.location.href = './pages/Video9/index.html';
+    };
+	
+	mindarThree.addAnchor(9).onTargetFound = () => {
+      console.log("Target 10 Found!");
+      window.location.href = './pages/Video10/index.html';
+    };
+	
+	mindarThree.addAnchor(10).onTargetFound = () => {
+      console.log("Target 11 Found!");
+      window.location.href = './pages/Video11/index.html';
+    };
+	
+	mindarThree.addAnchor(11).onTargetFound = () => {
+      console.log("Target 12 Found!");
+      window.location.href = './pages/Video12/index.html';
+    };
+
     await mindarThree.start();
+	document.getElementById('backgroundLayer').style.display = 'none';
+	document.querySelector('h1').style.color = '#fff';
+
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
 
-    // Enable stop button, disable start button
-    document.getElementById('startButton').disabled = true;
-    document.getElementById('stopButton').disabled = false;
+    startButton.disabled = true;
+    stopButton.disabled = false;
   };
 
-  // Function to stop the AR experience
   const stop = () => {
-    if (!isStarted) return; // Prevent stopping if not started
+	  
+	stopSound.play();  
+	  
+    if (!isStarted) return;
     isStarted = false;
 
-    // Stop the AR experience and animation loop
     mindarThree.stop();
     mindarThree.renderer.setAnimationLoop(null);
-    mindarThree = null; // Reset the AR instance
+    mindarThree = null;
+	
+	document.getElementById('backgroundLayer').style.display = 'block';
+	document.querySelector('h1').style.color = '#080808';
 
-    // Enable start button, disable stop button
-    document.getElementById('startButton').disabled = false;
-    document.getElementById('stopButton').disabled = true;
+    startButton.disabled = false;
+    stopButton.disabled = true;
   };
 
-  // Add event listeners to the start and stop buttons
-  document.getElementById('startButton').addEventListener('click', start);
-  document.getElementById('stopButton').addEventListener('click', stop);
+  startButton.addEventListener('click', start);
+  stopButton.addEventListener('click', stop);
+  
+  backButton.addEventListener('click', () => {
+    console.log('Back button clicked');
+	
+	BTSound.play();
+
+    setTimeout(() => {
+      window.location.href = '../mainPage/game.html'; // adjust as needed
+    }, 500);
+  });
 });

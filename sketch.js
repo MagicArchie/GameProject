@@ -10,7 +10,11 @@ let selectedLanguageOnOf = localStorage.getItem('selectedLanguageOnOf') || 'on';
 function preload() {
   bgImage = loadImage('assets/Background_IMG.jpg');
   
-  mainFont = loadFont('assets/fonts/IMFeENsc29P.ttf');
+  mainFont = loadFont('assets/fonts/EnglishFont.ttf');
+  
+  DifficultyBT_SFX = loadSound('assets/sounds/BT_SFX1.mp3');
+  StartBT1_SFX = loadSound('assets/sounds/BT_SFX2.mp3');
+  StartBT2_SFX = loadSound('assets/sounds/BT_SFX3.mp3');
 }
 
 function setup() {
@@ -71,6 +75,10 @@ function draw() {
 }
 
 function setDifficulty(level) {
+  
+  DifficultyBT_SFX.setVolume(0.8);
+  DifficultyBT_SFX.play();
+  
   selectedDifficulty = level;
   localStorage.setItem('selectedDifficulty', level); // Store in localStorage
   console.log(`Difficulty set to ${level}`);
@@ -96,21 +104,28 @@ function setDifficulty(level) {
 }
 
 function startGame() {
-  if (!startEnabled) {
-    console.log("Please select a difficulty before starting!");
-    return;
-  }
-
+	
   // Animation
   btnStart.attribute('src', 'assets/buttons/StartBT_Pressed.png');
   setTimeout(() => {
     btnStart.attribute('src', 'assets/buttons/StartBT_Normal.png');
   }, 400);
+  	 	
+  if (!startEnabled) {
+	StartBT2_SFX.setVolume(0.8);
+    StartBT2_SFX.play();  
+	  
+    console.log("Please select a difficulty before starting!");
+    return;
+  }
+  
+  StartBT1_SFX.setVolume(0.8);
+  StartBT1_SFX.play();
 
   console.log('Starting game...');
   setTimeout(() => {
     window.location.href = 'mainPage/game.html'; // Game Destination
-  }, 3000);
+  }, 1500);
 }
 
 function windowResized() {

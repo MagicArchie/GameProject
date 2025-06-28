@@ -1,7 +1,7 @@
 let bgImage;
 let difficulty;
 let finalLocationLabel;
-let mapImg;
+let mapImg, mapImgV1, mapImgV2;
 let menuButton;
 let menuBar;
 let msg;
@@ -29,34 +29,52 @@ let refreshSystem = false;
 let selectedLanguage = localStorage.getItem('selectedLanguage') || 'en'; // Default to English
 let selectedLanguageOnOf = localStorage.getItem('selectedLanguageOnOf') || 'on'; //Default to ON
 
+let spotsToReveal = 12; // default to 12
+
+let mainFont;
+let fontEn;
+let fontGr;
 
 function preload() {
+  fontEn = loadFont('../assets/fonts/EnglishFont.ttf');
+  fontGr = loadFont('../assets/fonts/GreekFont.otf');	
+	
   bgImage = loadImage('../assets/mainPage/MainPage_BG.jpg');
   finalLocationLabel = loadImage('../assets/mainPage/Lower_Sighn.png');
-  mapImg = loadImage('../assets/mainPage/Map.png');
+  mapImgV1 = loadImage('../assets/mainPage/MapV1.png'); // for Junior Hunt
+  mapImgV2 = loadImage('../assets/mainPage/MapV2.png'); // for Master Hunt
   rotateWarningImg = loadImage('../assets/RotateIMG.png');
-  
-  for (let i = 1; i <= maxReveals; i++) {
-	revealImages.push(loadImage(`../assets/mainPage/locatioTrigger/T${i}.png`));
-	labelImages.push(loadImage(`../assets/mainPage/finalWord/L${i}.png`));
-  }
 
+  Menu3BTS_SFX = loadSound('../assets/sounds/BT_SFX4.mp3');
+  LungMenu_SFX = loadSound('../assets/sounds/BT_SFX3.mp3');
+  Menu_SFX = loadSound('../assets/sounds/Menu_SFX.mp3');
+  MenuClose_SFX = loadSound('../assets/sounds/MenuClose_SFX.mp3');
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  
+    // === Language & font selection ===
+  if (selectedLanguage === 'gr') {
+    mainFont = fontGr;
+  } else {
+    mainFont = fontEn;
+  }
 
   // Get difficulty from localStorage
   difficulty = localStorage.getItem('selectedDifficulty');
 
   if (difficulty === 'Junior Hunt') {
     console.log('6 spots selected for Junior Hunt!');
-    // TODO: Setup 6 spot logic here
+    spotsToReveal = 6;
+	mapImg = mapImgV1;
   } else if (difficulty === 'Master Hunt') {
     console.log('12 spots selected for Master Hunt!');
-    // TODO: Setup 12 spot logic here
+    spotsToReveal = 12;
+	mapImg = mapImgV2;
   } else {
     console.log('No difficulty set. Defaulting...');
+	mapImg = mapImgV2;
   }
 
   // === Menu Button (top center) ===
@@ -169,39 +187,65 @@ function setup() {
   let labelH = (finalLocationLabel.height / finalLocationLabel.width) * labelW;
   let labelY = height * 0.95 - labelH / 2;
 
+  // === Load T (trigger) images based on difficulty ===
+  let tFolder = difficulty === 'Junior Hunt' ? 'JuniorHunt' : 'MasterHunt';
+
+  for (let i = 0; i < spotsToReveal; i++) {
+	  // T Images
+	  let tImg = createImg(`../assets/mainPage/locatioTrigger/${tFolder}/T${i + 1}.png`);
+	  tImg.hide();
+	  let mapW = width;
+	  let mapH = (mapImg.height / mapImg.width) * mapW;
+	  let mapY = height / 2 - mapH / 2;
+
+	  tImg.size(mapW, mapH);
+	  tImg.position(0, mapY);
+	  tImg.style('position', 'absolute');
+	  tImg.style('z-index', '5');
+	  revealImages.push(tImg);
+  }
+
   for (let i = 0; i < maxReveals; i++) {
-    // T Images
-    let tImg = createImg(`../assets/mainPage/locatioTrigger/T${i + 1}.png`);
-    tImg.hide();
-    tImg.size(mapW, mapH);
-    tImg.position(0, mapY);
-    tImg.style('position', 'absolute');
-    tImg.style('z-index', '5');
-    revealImages[i] = tImg;
-
-    // L Images
-    let lImg = createImg(`../assets/mainPage/finalWord/L${i + 1}.png`);
-    lImg.hide();
-    lImg.size(labelW, labelH);
-    lImg.position(0, labelY);
-    lImg.style('position', 'absolute');
-    lImg.style('z-index', '6'); // above the T image
-    labelImages[i] = lImg;
+	  // L Images
+	  let labelW = width;
+	  let labelH = (finalLocationLabel.height / finalLocationLabel.width) * labelW;
+	  let labelY = height * 0.95 - labelH / 2;
+      
+      let lImg = createImg(`../assets/mainPage/finalWord/L${i + 1}.png`);
+      lImg.hide();
+      lImg.size(labelW, labelH);
+      lImg.position(0, labelY);
+      lImg.style('position', 'absolute');
+      lImg.style('z-index', '6'); // above the T image
+      labelImages[i] = lImg;
   }
   
-  // === Auto-reveal from localStorage
-  autoRevealCount = parseInt(localStorage.getItem("LocationsComplete")) || 0;
+  revealCurrentProgress();
 
-  for (let i = 0; i < autoRevealCount && i < maxReveals; i++) {
-    revealImages[i].show();
-    labelImages[i].show();
-    console.log(`Auto-Revealed from saved progress: T${i + 1} and L${i + 1}`);
+  if (difficulty === 'Junior Hunt') {
+  for (let i = 0; i < autoRevealCount && i < revealImages.length; i++) {
+    revealImages[i].show(); // T1–T6
+    let lIndex1 = i * 2;
+    let lIndex2 = lIndex1 + 1;
+    if (lIndex1 < labelImages.length) labelImages[lIndex1].show();
+    if (lIndex2 < labelImages.length) labelImages[lIndex2].show();
+    console.log(`Auto-Revealed T${i + 1}, L${lIndex1 + 1}, L${lIndex2 + 1}`);
   }
-  
+} else {
+  for (let i = 0; i < autoRevealCount && i < revealImages.length; i++) {
+    revealImages[i].show(); // T1–T12
+    labelImages[i].show();  // L1–L12
+    console.log(`Auto-Revealed T${i + 1}, L${i + 1}`);
+  }
+}
+ 
   windowResized();
 }
 
 function draw() {
+  textFont(mainFont);
+  textStyle(NORMAL);
+  
   // === Enforce portrait orientation ===
   if (windowWidth > windowHeight) {
 	  labelsRevealed = false; // Reset when user switches to landscape
@@ -214,7 +258,7 @@ function draw() {
 
 	  fill(255);
 	  textAlign(CENTER, TOP);
-	  textSize(width * 0.04);
+	  textSize(width * 0.05);
 	  if (selectedLanguage === 'gr') {
 		// Show Greek text
 		msg = "Παρακαλώ κρατήστε τη συσκευή κάθετα";
@@ -223,7 +267,7 @@ function draw() {
 		msg = "Please hold your device vertically";
       }
 	  let textBoxWidth = width * 0.8;
-	  text(msg, width / 2 - textBoxWidth / 2, height / 2 + warningSize / 2, textBoxWidth);
+	  text(msg, width / 2 - textBoxWidth / 2, height / 2.2 + warningSize / 2, textBoxWidth);
 
 	  // Hide all interactive elements
 	  hideMenuBar();      // Hides menuBar and menuButton
@@ -241,28 +285,21 @@ function draw() {
 	  return;
   }
   
-  // Re-show revealed images when back in portrait
   if (windowWidth < windowHeight) {
-	  
-	  //Fix for MenuButton Problem -[]-
-	  if (refreshSystem == true) {
-		  location.reload();
-		  refreshSystem = false;
-	  }
-	  
-	  // We're now in portrait mode, after being warned
-	  if (!labelsRevealed) {
-		autoRevealCount = parseInt(localStorage.getItem("LocationsComplete")) || 0;
+    
+    //Fix for MenuButton Problem -[]-
+    if (refreshSystem == true) {
+        location.reload();
+        refreshSystem = false;
+    }
 
-		for (let i = 0; i < autoRevealCount && i < maxReveals; i++) {
-		  revealImages[i].show();
-		  labelImages[i].show();
-		  console.log(`Auto-Revealed from saved progress: T${i + 1} and L${i + 1}`);
-		}
-
-		labelsRevealed = true;
-		menuButton.show();
-	  }
+    // We're now in portrait mode, after being warned
+    if (!labelsRevealed) {
+        autoRevealCount = parseInt(localStorage.getItem("LocationsComplete")) || 0;
+        revealCurrentProgress(); // this handles correct logic for both hunt types
+        labelsRevealed = true;
+        menuButton.show();
+    }
   }
 
   imageMode(CORNER); //Important reset
@@ -349,6 +386,8 @@ function windowResized() {
 }
 
 function mousePressed() {
+  //autoRevealCount = Math.min(autoRevealCount, maxAuto);
+
   // === Handle menu closing ===
   if (menuBar.elt.style.display !== 'none') {
     let isOverScan = isMouseOver(scanButton);
@@ -356,6 +395,9 @@ function mousePressed() {
     let isOverExit = isMouseOver(exitButton);
 
     if (!isOverScan && !isOverLang && !isOverExit) {
+	  MenuClose_SFX.setVolume(0.8);
+      MenuClose_SFX.play(); 
+  
       hideMenuBar();
       return;
     }
@@ -366,11 +408,11 @@ function mousePressed() {
     let isOverGreek = isMouseOver(LungMenu_BT1);
     let isOverEnglish = isMouseOver(LungMenu_BT2);
     let isOverOnOff = isMouseOver(LungMenu_BT3);
-	let isOverLang = isMouseOver(languageButton);
+    let isOverLang = isMouseOver(languageButton);
 
     if (!isOverGreek && !isOverEnglish && !isOverOnOff && !isOverLang && LungMenuActive == true) {
       hideLungMenu();
-	  LungMenuActive = false;
+      LungMenuActive = false;
       return;
     }
   }
@@ -378,20 +420,53 @@ function mousePressed() {
   // === Handle location trigger ===
   if (!LocationTriggerTester || !clickReady) return;
 
-  if (clickCount < maxReveals) {
-    clickReady = false;
+  clickReady = false;
 
-    revealImages[clickCount].show();
-    labelImages[clickCount].show();
+  const maxAuto = difficulty === 'Junior Hunt' ? 6 : 12;
+  if (autoRevealCount < maxAuto) {
+    autoRevealCount++;
+    localStorage.setItem('LocationsComplete', autoRevealCount);
 
-    console.log(`Revealed T${clickCount + 1} and L${clickCount + 1}`);
-    clickCount++;
-
-    setTimeout(() => {
-      clickReady = true;
-    }, 200);
+    revealCurrentProgress();
   } else {
-    console.log("All images revealed!");
+    console.log("All locations revealed.");
+  }
+
+  setTimeout(() => {
+    clickReady = true;
+  }, 200);
+}
+
+function revealCurrentProgress() {
+  // Clear all first
+  for (let i = 0; i < revealImages.length; i++) revealImages[i].hide();
+  for (let i = 0; i < labelImages.length; i++) labelImages[i].hide();
+
+  if (difficulty === 'Junior Hunt') {
+    for (let i = 0; i < autoRevealCount && i < 6; i++) {
+      let tIndex = i;
+      let lIndex1 = i * 2;
+      let lIndex2 = lIndex1 + 1;
+
+      if (tIndex < revealImages.length) revealImages[tIndex].show();
+      if (lIndex1 < labelImages.length) labelImages[lIndex1].show();
+      if (lIndex2 < labelImages.length) labelImages[lIndex2].show();
+    }
+
+    if (autoRevealCount === 6) {
+      const tIndex = 5;         // T6
+      const lIndex1 = 10;       // L11
+      const lIndex2 = 11;       // L12
+
+      if (tIndex < revealImages.length) revealImages[tIndex].show();
+      if (lIndex1 < labelImages.length) labelImages[lIndex1].show();
+      if (lIndex2 < labelImages.length) labelImages[lIndex2].show();
+    }
+  } else if (difficulty === 'Master Hunt') {
+    for (let i = 0; i < autoRevealCount && i < 12; i++) {
+      if (i < revealImages.length) revealImages[i].show();
+      if (i < labelImages.length) labelImages[i].show();
+    }
   }
 }
 
@@ -406,6 +481,10 @@ function isMouseOver(button) {
 
 function menuButtonPressed() {
   console.log('Menu button pressed!');
+  
+  Menu_SFX.setVolume(0.8);
+  Menu_SFX.play();  
+  
   menuButton.hide();
   menuBar.show();
   
@@ -432,6 +511,9 @@ function hideLungMenu() {
 function ScanBT_Pressed() {
 	console.log('Scan button pressed');
 	
+	Menu3BTS_SFX.setVolume(0.8);
+    Menu3BTS_SFX.play();  
+	
 	scanButton.attribute('src', '../assets/mainPage/buttons/Scan_Pressed.png');
 	setTimeout(() => {
 		scanButton.attribute('src', '../assets/mainPage/buttons/Scan_BT.png');
@@ -444,6 +526,9 @@ function ScanBT_Pressed() {
 
 function LunguageBT_Pressed() {
 	console.log('Language button pressed');
+	
+	Menu3BTS_SFX.setVolume(0.8);
+    Menu3BTS_SFX.play();  
 	
 	languageButton.attribute('src', '../assets/mainPage/buttons/Language_Pressed.png');
 	setTimeout(() => {
@@ -469,6 +554,9 @@ function LunguageBT_Pressed() {
 function GreekSelected() {
 	console.log('Greek Subtitles Selected');
 	
+	LungMenu_SFX.setVolume(0.8);
+    LungMenu_SFX.play();  
+	
 	if (LungSelected == 2) {
 		LungMenu_BT1.attribute('src', '../assets/mainPage/buttons/GR_A.png');
 		LungMenu_BT2.attribute('src', '../assets/mainPage/buttons/EN_D.png');
@@ -483,6 +571,9 @@ function GreekSelected() {
 function EnglishSelected() {
 	console.log('English Subtitles Selected');
 	
+	LungMenu_SFX.setVolume(0.8);
+    LungMenu_SFX.play();  
+	
 	if (LungSelected == 1) {
 		LungMenu_BT1.attribute('src', '../assets/mainPage/buttons/GR_D.png');
 		LungMenu_BT2.attribute('src', '../assets/mainPage/buttons/EN_A.png');
@@ -496,6 +587,9 @@ function EnglishSelected() {
 
 function LunguageOnOf() {
 	console.log('Subtitles:');
+	
+	LungMenu_SFX.setVolume(0.8);
+    LungMenu_SFX.play();  
 	
 	if (Subtitles_OnOf == true) {
 		console.log('Off');
@@ -517,12 +611,16 @@ function LunguageOnOf() {
 function ExitBT_Pressed() {
 	console.log('Exit button pressed — returning to Welcome Page');
 	
+	Menu3BTS_SFX.setVolume(0.8);
+    Menu3BTS_SFX.play();  
+	
 	exitButton.attribute('src', '../assets/mainPage/buttons/Exit_Pressed.png');
 	setTimeout(() => {
 		exitButton.attribute('src', '../assets/mainPage/buttons/Exit_BT.png');
 	}, 400);
 	
 	setTimeout(() => {
+		localStorage.clear();
 		window.location.href = '../index.html';
 	}, 600);
 }
